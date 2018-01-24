@@ -36,6 +36,45 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
     private WifiP2pDevice device;
 
     @Override
+    public void onPeersAvailable(WifiP2pDeviceList peerList) {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+        peers.clear();
+        peers.addAll(peerList.getDeviceList());
+        ((WiFiPeerListAdapter) getListAdapter()).notifyDataSetChanged();
+        if (peers.size() == 0) {
+            //Log.d(WiFiDirectActivity.TAG, "No devices found");
+            return;
+        }
+
+    }
+
+    public interface DeviceActionListener {
+
+        void showDetails(WifiP2pDevice device);
+
+        void cancelDisconnect();
+
+        void connect(WifiP2pConfig config);
+
+        void disconnect();
+    }
+    /**
+     * Update UI for this device.
+     *
+     * @param device WifiP2pDevice object
+     */
+    public void updateThisDevice(WifiP2pDevice device) {
+        this.device = device;
+        TextView view = (TextView) mContentView.findViewById(R.id.device_name);
+        //TextView view = (TextView) mContentView.findViewById(R.id.my_name);
+        view.setText(device.deviceName);
+        //view = (TextView) mContentView.findViewById(R.id.my_status);
+        //view.setText(getDeviceStatus(device.status));
+    }
+
+    @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         this.setListAdapter(new WiFiPeerListAdapter(getActivity(), R.layout.device_list_row_adapter, peers));
@@ -112,84 +151,48 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
             }
             WifiP2pDevice device = items.get(position);
             if (device != null) {
-                //TextView top = (TextView) v.findViewById(R.id.device_name);
-                //TextView bottom = (TextView) v.findViewById(R.id.device_details);
-                //if (top != null) {
-                //    top.setText(device.deviceName);
-                //}
-                //if (bottom != null) {
-                //    bottom.setText(getDeviceStatus(device.status));
-                //}
-            }
-
-            return v;
-
-        }
-    }
-
-    /**
-     * Update UI for this device.
-     *
-     * @param device WifiP2pDevice object
-     */
-    public void updateThisDevice(WifiP2pDevice device) {
-        this.device = device;
-        //TextView view = (TextView) mContentView.findViewById(R.id.my_name);
-        //view.setText(device.deviceName);
-        //view = (TextView) mContentView.findViewById(R.id.my_status);
-        //view.setText(getDeviceStatus(device.status));
-    }
-
-    @Override
-    public void onPeersAvailable(WifiP2pDeviceList peerList) {
-        if (progressDialog != null && progressDialog.isShowing()) {
-            progressDialog.dismiss();
-        }
-        peers.clear();
-        peers.addAll(peerList.getDeviceList());
-        ((WiFiPeerListAdapter) getListAdapter()).notifyDataSetChanged();
-        if (peers.size() == 0) {
-            //Log.d(WiFiDirectActivity.TAG, "No devices found");
-            return;
-        }
-
-    }
-
-    public void clearPeers() {
-        peers.clear();
-        ((WiFiPeerListAdapter) getListAdapter()).notifyDataSetChanged();
-    }
-
-    /**
-     *
-     */
-    public void onInitiateDiscovery() {
-        if (progressDialog != null && progressDialog.isShowing()) {
-            progressDialog.dismiss();
-        }
-        progressDialog = ProgressDialog.show(getActivity(), "Press back to cancel", "finding peers", true,
-                true, new DialogInterface.OnCancelListener() {
-
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-
+                TextView top = (TextView) v.findViewById(R.id.device_name);
+                TextView bottom = (TextView) v.findViewById(R.id.device_details);
+                if (top != null) {
+                    top.setText(device.deviceName);
+                    //}
+                    if (bottom != null) {
+                        bottom.setText(getDeviceStatus(device.status));
                     }
-                });
+                }
+            }
+            return v;
+        }
+
+
+
+        public void clearPeers() {
+            peers.clear();
+            ((WiFiPeerListAdapter) getListAdapter()).notifyDataSetChanged();
+        }
+
+        /**
+         *
+         */
+        public void onInitiateDiscovery() {
+            if (progressDialog != null && progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
+            progressDialog = ProgressDialog.show(getActivity(), "Press back to cancel", "finding peers", true,
+                    true, new DialogInterface.OnCancelListener() {
+
+                        @Override
+                        public void onCancel(DialogInterface dialog) {
+
+                        }
+                    });
+        }
+
+        /**
+         * An interface-callback for the activity to listen to fragment interaction
+         * events.
+         */
+
+
     }
-
-    /**
-     * An interface-callback for the activity to listen to fragment interaction
-     * events.
-     */
-    public interface DeviceActionListener {
-
-        void showDetails(WifiP2pDevice device);
-
-        void cancelDisconnect();
-
-        void connect(WifiP2pConfig config);
-
-        void disconnect();
-    }
-
 }
